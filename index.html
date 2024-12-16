@@ -99,19 +99,6 @@
     .top    { transform: rotateX(90deg) translateZ(100px);  }
     .bottom { transform: rotateX(-90deg) translateZ(100px); }
 
-    .footer-text {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-      z-index: 1000;
-      pointer-events: none;
-    }
-
     .footer {
       position: fixed;
       bottom: 0;
@@ -144,7 +131,6 @@
   </div>
 </div>
 
-<div class="footer-text">Fatto con l'IA come farebbe Salvo.</div>
 <div class="footer">suca sta gran minchia</div>
 
 <script>
@@ -161,6 +147,8 @@
     startX = touch.clientX;
     startY = touch.clientY;
     isDragging = true;
+
+    event.preventDefault(); // Impedisce il comportamento predefinito (scroll della pagina)
   });
 
   document.addEventListener('touchmove', (event) => {
@@ -181,6 +169,8 @@
 
     startX = touch.clientX;
     startY = touch.clientY;
+
+    event.preventDefault(); // Impedisce il comportamento predefinito durante il drag
   });
 
   document.addEventListener('touchend', () => {
