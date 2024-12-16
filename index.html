@@ -35,18 +35,18 @@
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Arial', sans-serif;
-      font-size: 2rem;
+      font-size: 3rem;
       font-weight: bold;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-align: center;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
       z-index: 1000;
     }
 
     @media (max-width: 768px) {
       h1 {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
+        font-size: 2.5rem;
+        letter-spacing: 2px;
       }
     }
 
@@ -101,7 +101,7 @@
 
     .footer-text {
       position: fixed;
-      bottom: 10px;
+      bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
       color: #fff;
@@ -110,6 +110,21 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
       z-index: 1000;
       pointer-events: none;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      z-index: 1000;
     }
   </style>
 </head>
@@ -130,6 +145,7 @@
 </div>
 
 <div class="footer-text">Fatto con l'IA come farebbe Salvo.</div>
+<div class="footer">suca sta gran minchia</div>
 
 <script>
   const cube = document.querySelector('.cube');
@@ -154,12 +170,12 @@
     const deltaX = touch.clientX - startX;
     const deltaY = touch.clientY - startY;
 
-    // Aumenta la velocità del movimento
-    velocityX = deltaX * 0.5;
-    velocityY = deltaY * 0.5;
+    // Aumenta ulteriormente la velocità del movimento
+    velocityX = deltaX * 0.7; // Più veloce
+    velocityY = deltaY * 0.7;
 
-    currentRotationX += velocityY * 0.1;
-    currentRotationY += velocityX * 0.1;
+    currentRotationX += velocityY * 0.15;
+    currentRotationY += velocityX * 0.15;
 
     cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
 
@@ -177,11 +193,11 @@
         return;
       }
 
-      velocityX *= 0.95; // Riduce la velocità gradualmente
-      velocityY *= 0.95;
+      velocityX *= 0.9; // Riduce la velocità gradualmente
+      velocityY *= 0.9;
 
-      currentRotationX += velocityY * 0.1;
-      currentRotationY += velocityX * 0.1;
+      currentRotationX += velocityY * 0.15;
+      currentRotationY += velocityX * 0.15;
 
       cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
     }, 16); // 60 fps
