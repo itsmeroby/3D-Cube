@@ -34,11 +34,13 @@
     h1 {
       color: #fff;
       position: absolute;
-      top: 20px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
       font-family: Arial, sans-serif;
+      font-size: 1.5rem; /* Dimensioni ridotte per mobile */
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      z-index: 1000;
     }
 
     .cube-container {
@@ -51,18 +53,29 @@
 
     .cube {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: 200px; /* Cubo più piccolo per schermi piccoli */
+      height: 200px;
       transform-style: preserve-3d;
       transition: transform 0.1s linear;
       will-change: transform;
-      z-index: 10; /* Impostiamo il cubo davanti alle particelle */
+      z-index: 10;
+    }
+
+    @media (min-width: 768px) {
+      .cube {
+        width: 300px;
+        height: 300px;
+      }
+
+      h1 {
+        font-size: 2rem; /* Dimensione maggiore su desktop */
+      }
     }
 
     .face {
       position: absolute;
-      width: 300px;
-      height: 300px;
+      width: 100%;
+      height: 100%;
       background: rgba(255, 255, 255, 0.8);
       border: 2px solid #fff;
       display: flex;
@@ -77,24 +90,24 @@
       object-fit: cover;
     }
 
-    .front  { transform: rotateY(0deg) translateZ(150px);  }
-    .back   { transform: rotateY(180deg) translateZ(150px); }
-    .right  { transform: rotateY(90deg) translateZ(150px);  }
-    .left   { transform: rotateY(-90deg) translateZ(150px); }
-    .top    { transform: rotateX(90deg) translateZ(150px);  }
-    .bottom { transform: rotateX(-90deg) translateZ(150px); }
+    .front  { transform: rotateY(0deg) translateZ(100px);  }
+    .back   { transform: rotateY(180deg) translateZ(100px); }
+    .right  { transform: rotateY(90deg) translateZ(100px);  }
+    .left   { transform: rotateY(-90deg) translateZ(100px); }
+    .top    { transform: rotateX(90deg) translateZ(100px);  }
+    .bottom { transform: rotateX(-90deg) translateZ(100px); }
 
     .particle {
       position: absolute;
-      width: 15px;
-      height: 15px;
-      background-color: yellow; /* Cambiato il colore in giallo */
+      width: 10px;
+      height: 10px;
+      background-color: yellow;
       border-radius: 50%;
       opacity: 1;
       pointer-events: none;
       animation: particleAnimation 1s forwards;
-      z-index: 1; /* Impostiamo le particelle dietro al cubo */
-      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* Aggiunto effetto glow giallo */
+      z-index: 1;
+      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
     }
 
     @keyframes particleAnimation {
@@ -115,10 +128,11 @@
       transform: translateX(-50%);
       color: #fff;
       font-family: Arial, sans-serif;
-      font-size: 16px;
+      font-size: 14px;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
       z-index: 1000;
       pointer-events: none;
+      transform-origin: center;
     }
   </style>
 </head>
@@ -138,15 +152,13 @@
   </div>
 </div>
 
-<div class="footer-text">Fatto con l'IA come lo farebbe Salvo.</div>
+<div class="footer-text" id="footerText">Fatto con l'IA come farebbe Salvo.</div>
 
 <script>
-  // Crea un oggetto audio e impostalo
-  const audio = new Audio('background-music.mp3'); // Usa il percorso del tuo file audio
-  audio.loop = true; // Ripeti l'audio
-  audio.volume = 0.5; // Imposta il volume
+  const audio = new Audio('background-music.mp3');
+  audio.loop = true;
+  audio.volume = 0.5;
 
-  // Funzione per riprodurre la musica quando c'è una interazione utente
   function startAudio() {
     audio.play().then(() => {
       console.log('Musica avviata con successo');
@@ -155,64 +167,60 @@
     });
   }
 
-  // Inizia a riprodurre la musica dopo un clic sulla pagina
   window.addEventListener('click', startAudio);
 
   const cube = document.querySelector('.cube');
   const body = document.body;
-  const cubeContainer = document.querySelector('.cube-container');
+  const footerText = document.getElementById('footerText');
 
   let zoomLevel = 1;
 
-  // Funzione per gestire il movimento del mouse
-  document.addEventListener('mousemove', (event) => {
-    const x = (event.clientX / window.innerWidth) * 360 - 180;
-    const y = (event.clientY / window.innerHeight) * 360 - 180;
+  let startX, startY, currentRotationX = 0, currentRotationY = 0;
 
-    // Ruota il cubo in base alla posizione del cursore
-    cube.style.transform = `rotateX(${-y}deg) rotateY(${x}deg)`;
-
-    // Modifica la posizione del gradiente in base al movimento del cursore
-    const gradientX = event.clientX / window.innerWidth * 100;
-    const gradientY = event.clientY / window.innerHeight * 100;
-    body.style.background = `radial-gradient(circle at ${gradientX}% ${gradientY}%, rgba(0, 0, 20, 0.95), rgba(10, 0, 30, 0.9), rgba(0, 0, 0, 1))`;
-
-    // Aggiungi particelle bianche che escono dalle facce del cubo
-    createParticleFromCube();
+  // Touch controls for cube rotation
+  document.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
   });
 
-  // Funzione per gestire la creazione delle particelle
-  function createParticleFromCube() {
-    const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-    const randomFace = faces[Math.floor(Math.random() * faces.length)];
+  document.addEventListener('touchmove', (event) => {
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
 
-    const particle = document.createElement('div');
-    particle.classList.add('particle');
+    currentRotationX += deltaY * 0.1;
+    currentRotationY += deltaX * 0.1;
 
-    const face = document.querySelector(`.face.${randomFace}`);
-    const faceRect = face.getBoundingClientRect();
+    cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
 
-    const randomX = Math.random() * faceRect.width;
-    const randomY = Math.random() * faceRect.height;
+    startX = touch.clientX;
+    startY = touch.clientY;
+  });
 
-    particle.style.left = `${faceRect.left + randomX - 7.5}px`;
-    particle.style.top = `${faceRect.top + randomY - 7.5}px`;
+  // Pinch-to-zoom
+  let initialDistance = null;
 
-    cubeContainer.appendChild(particle);
+  document.addEventListener('touchmove', (event) => {
+    if (event.touches.length === 2) {
+      const dist = Math.hypot(
+        event.touches[0].clientX - event.touches[1].clientX,
+        event.touches[0].clientY - event.touches[1].clientY
+      );
 
-    // Rimuovi la particella dopo che l'animazione è terminata
-    setTimeout(() => {
-      particle.remove();
-    }, 1000);
-  }
+      if (initialDistance === null) initialDistance = dist;
 
-  // Ascoltatore dell'evento "wheel" per il controllo dello zoom
-  document.addEventListener('wheel', (event) => {
-    event.preventDefault(); // Impedisce il comportamento predefinito
-    zoomLevel = Math.min(Math.max(zoomLevel + (event.deltaY > 0 ? -0.1 : 0.1), 0.5), 2);
-    document.body.style.transform = `scale(${zoomLevel})`;
-  }, { passive: false }); // Impostiamo passive: false per permettere preventDefault()
+      zoomLevel = Math.min(Math.max(zoomLevel * (dist / initialDistance), 0.5), 2);
+      body.style.transform = `scale(${zoomLevel})`;
+      footerText.style.transform = `translateX(-50%) scale(${1 / zoomLevel})`;
 
+      initialDistance = dist;
+    }
+  });
+
+  document.addEventListener('touchend', () => {
+    initialDistance = null;
+  });
 </script>
 
 </body>
