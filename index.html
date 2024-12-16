@@ -26,9 +26,6 @@
       animation: aurora 10s ease infinite;
       perspective: 1000px;
       position: relative;
-      transform-origin: center center;
-      transition: transform 0.3s ease-in-out;
-      will-change: transform, background;
     }
 
     h1 {
@@ -37,10 +34,20 @@
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      font-family: Arial, sans-serif;
-      font-size: 1.5rem; /* Dimensioni ridotte per mobile */
+      font-family: 'Arial', sans-serif;
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-align: center;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
       z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+      }
     }
 
     .cube-container {
@@ -53,22 +60,17 @@
 
     .cube {
       position: relative;
-      width: 200px; /* Cubo più piccolo per schermi piccoli */
+      width: 200px;
       height: 200px;
       transform-style: preserve-3d;
-      transition: transform 0.1s linear;
+      transition: transform 0.1s ease-out;
       will-change: transform;
-      z-index: 10;
     }
 
     @media (min-width: 768px) {
       .cube {
         width: 300px;
         height: 300px;
-      }
-
-      h1 {
-        font-size: 2rem; /* Dimensione maggiore su desktop */
       }
     }
 
@@ -97,30 +99,6 @@
     .top    { transform: rotateX(90deg) translateZ(100px);  }
     .bottom { transform: rotateX(-90deg) translateZ(100px); }
 
-    .particle {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background-color: yellow;
-      border-radius: 50%;
-      opacity: 1;
-      pointer-events: none;
-      animation: particleAnimation 1s forwards;
-      z-index: 1;
-      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
-    }
-
-    @keyframes particleAnimation {
-      0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(100px, -100px) scale(0.5);
-        opacity: 0;
-      }
-    }
-
     .footer-text {
       position: fixed;
       bottom: 10px;
@@ -132,7 +110,6 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
       z-index: 1000;
       pointer-events: none;
-      transform-origin: center;
     }
   </style>
 </head>
@@ -152,45 +129,37 @@
   </div>
 </div>
 
-<div class="footer-text" id="footerText">Fatto con l'IA come farebbe Salvo.</div>
+<div class="footer-text">Fatto con l'IA come farebbe Salvo.</div>
 
 <script>
-  const audio = new Audio('background-music.mp3');
-  audio.loop = true;
-  audio.volume = 0.5;
-
-  function startAudio() {
-    audio.play().then(() => {
-      console.log('Musica avviata con successo');
-    }).catch((error) => {
-      console.error('Errore nel tentativo di avviare la musica:', error);
-    });
-  }
-
-  window.addEventListener('click', startAudio);
-
   const cube = document.querySelector('.cube');
-  const body = document.body;
-  const footerText = document.getElementById('footerText');
 
-  let zoomLevel = 1;
+  let startX, startY;
+  let currentRotationX = 0, currentRotationY = 0;
+  let velocityX = 0, velocityY = 0;
+  let isDragging = false;
 
-  let startX, startY, currentRotationX = 0, currentRotationY = 0;
-
-  // Touch controls for cube rotation
+  // Funzione per il drag con touch
   document.addEventListener('touchstart', (event) => {
     const touch = event.touches[0];
     startX = touch.clientX;
     startY = touch.clientY;
+    isDragging = true;
   });
 
   document.addEventListener('touchmove', (event) => {
+    if (!isDragging) return;
+
     const touch = event.touches[0];
     const deltaX = touch.clientX - startX;
     const deltaY = touch.clientY - startY;
 
-    currentRotationX += deltaY * 0.1;
-    currentRotationY += deltaX * 0.1;
+    // Aumenta la velocità del movimento
+    velocityX = deltaX * 0.5;
+    velocityY = deltaY * 0.5;
+
+    currentRotationX += velocityY * 0.1;
+    currentRotationY += velocityX * 0.1;
 
     cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
 
@@ -198,28 +167,24 @@
     startY = touch.clientY;
   });
 
-  // Pinch-to-zoom
-  let initialDistance = null;
-
-  document.addEventListener('touchmove', (event) => {
-    if (event.touches.length === 2) {
-      const dist = Math.hypot(
-        event.touches[0].clientX - event.touches[1].clientX,
-        event.touches[0].clientY - event.touches[1].clientY
-      );
-
-      if (initialDistance === null) initialDistance = dist;
-
-      zoomLevel = Math.min(Math.max(zoomLevel * (dist / initialDistance), 0.5), 2);
-      body.style.transform = `scale(${zoomLevel})`;
-      footerText.style.transform = `translateX(-50%) scale(${1 / zoomLevel})`;
-
-      initialDistance = dist;
-    }
-  });
-
   document.addEventListener('touchend', () => {
-    initialDistance = null;
+    isDragging = false;
+
+    // Simula inerzia
+    const inertiaInterval = setInterval(() => {
+      if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) {
+        clearInterval(inertiaInterval);
+        return;
+      }
+
+      velocityX *= 0.95; // Riduce la velocità gradualmente
+      velocityY *= 0.95;
+
+      currentRotationX += velocityY * 0.1;
+      currentRotationY += velocityX * 0.1;
+
+      cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
+    }, 16); // 60 fps
   });
 </script>
 
