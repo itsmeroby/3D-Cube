@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Cubo 3D Animato con Audio tramite JavaScript</title>
   <style>
     @keyframes aurora {
@@ -25,7 +25,10 @@
       background-size: 400% 400%;
       animation: aurora 10s ease infinite;
       perspective: 1000px;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between; /* Spazio tra gli elementi */
+      align-items: center;
     }
 
     h1 {
@@ -54,23 +57,41 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100%;
+      flex-grow: 1; /* Permette al cubo di crescere e occupare lo spazio tra il footer e l'h1 */
       position: relative;
+      width: 100%;
+      padding: 20px; /* Aggiungi padding per evitare che il cubo tocchi i bordi */
     }
 
     .cube {
       position: relative;
-      width: 200px;
-      height: 200px;
+      width: 350px; /* Cubo leggermente più piccolo */
+      height: 350px; /* Cubo leggermente più piccolo */
       transform-style: preserve-3d;
-      transition: transform 0.1s ease-out;
       will-change: transform;
+      animation: rotateCube 10s linear infinite;
     }
 
-    @media (min-width: 768px) {
+    @media (max-width: 768px) and (orientation: portrait) {
       .cube {
-        width: 300px;
-        height: 300px;
+        width: 240px; /* Ridotto per dispositivi piccoli */
+        height: 240px; /* Ridotto per dispositivi piccoli */
+      }
+    }
+
+    @media (min-width: 769px) {
+      .cube {
+        width: 320px; /* Ridotto per schermi più grandi */
+        height: 320px; /* Ridotto per schermi più grandi */
+      }
+    }
+
+    @keyframes rotateCube {
+      0% {
+        transform: rotateX(0deg) rotateY(0deg);
+      }
+      100% {
+        transform: rotateX(360deg) rotateY(360deg);
       }
     }
 
@@ -92,26 +113,27 @@
       object-fit: cover;
     }
 
-    .front  { transform: rotateY(0deg) translateZ(100px);  }
-    .back   { transform: rotateY(180deg) translateZ(100px); }
-    .right  { transform: rotateY(90deg) translateZ(100px);  }
-    .left   { transform: rotateY(-90deg) translateZ(100px); }
-    .top    { transform: rotateX(90deg) translateZ(100px);  }
-    .bottom { transform: rotateX(-90deg) translateZ(100px); }
+    .front  { transform: rotateY(0deg) translateZ(calc(var(--cube-size) / 2)); }
+    .back   { transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2)); }
+    .right  { transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2)); }
+    .left   { transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2)); }
+    .top    { transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2)); }
+    .bottom { transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2)); }
 
-    .footer {
+    /* Nuovo footer che si espande su tutta la larghezza */
+    .new-footer {
       position: fixed;
-      bottom: 0;
+      bottom: 55px; 
       left: 0;
       width: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0, 0, 0, 0.8);
       color: #fff;
-      text-align: center;
-      padding: 10px;
       font-family: Arial, sans-serif;
-      font-size: 1rem;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 15px;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-      z-index: 1000;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -120,7 +142,7 @@
 <h1>SALVATORE FOTTI</h1>
 
 <div class="cube-container">
-  <div class="cube">
+  <div class="cube" style="--cube-size: 350px;">
     <!-- Sostituire le immagini con "salvatore.png" -->
     <div class="face front"><img src="salvatore.png" alt="Front"></div>
     <div class="face back"><img src="salvatore.png" alt="Back"></div>
@@ -131,66 +153,65 @@
   </div>
 </div>
 
-<div class="footer">suca sta gran minchia</div>
+<!-- Nuovo footer che si espande su tutta la larghezza -->
+<div class="new-footer">suca sta gran minchia</div>
 
 <script>
-  const cube = document.querySelector('.cube');
+  const cubes = document.querySelectorAll('.cube');
+
+  // Adatta la dimensione dinamica del cubo in base alla sua altezza/larghezza
+  cubes.forEach(cube => {
+    const size = getComputedStyle(cube).getPropertyValue('width');
+    cube.style.setProperty('--cube-size', size);
+  });
 
   let startX, startY;
   let currentRotationX = 0, currentRotationY = 0;
   let velocityX = 0, velocityY = 0;
   let isDragging = false;
 
-  // Funzione per il drag con touch
+  // Disabilita lo zoom con touch
   document.addEventListener('touchstart', (event) => {
-    const touch = event.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    isDragging = true;
-
-    event.preventDefault(); // Impedisce il comportamento predefinito (scroll della pagina)
-  });
+    if (event.touches.length > 1) {
+      event.preventDefault();
+    }
+  }, { passive: false });
 
   document.addEventListener('touchmove', (event) => {
-    if (!isDragging) return;
+    if (isDragging) {
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
 
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - startY;
+      velocityX = deltaX * 0.5;
+      velocityY = deltaY * 0.5;
 
-    // Aumenta ulteriormente la velocità del movimento
-    velocityX = deltaX * 0.7; // Più veloce
-    velocityY = deltaY * 0.7;
+      currentRotationX += velocityY * 0.2;
+      currentRotationY += velocityX * 0.2;
 
-    currentRotationX += velocityY * 0.15;
-    currentRotationY += velocityX * 0.15;
+      cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
 
-    cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
+      startX = touch.clientX;
+      startY = touch.clientY;
 
-    startX = touch.clientX;
-    startY = touch.clientY;
-
-    event.preventDefault(); // Impedisce il comportamento predefinito durante il drag
+      event.preventDefault();
+    }
   });
 
   document.addEventListener('touchend', () => {
     isDragging = false;
+  });
 
-    // Simula inerzia
-    const inertiaInterval = setInterval(() => {
-      if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) {
-        clearInterval(inertiaInterval);
-        return;
-      }
+  // Assegna eventi di drag con touch
+  cubes.forEach(cube => {
+    cube.addEventListener('touchstart', (event) => {
+      const touch = event.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      isDragging = true;
 
-      velocityX *= 0.9; // Riduce la velocità gradualmente
-      velocityY *= 0.9;
-
-      currentRotationX += velocityY * 0.15;
-      currentRotationY += velocityX * 0.15;
-
-      cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
-    }, 16); // 60 fps
+      event.preventDefault();
+    });
   });
 </script>
 
