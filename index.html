@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cubo 3D Animato con Audio tramite JavaScript</title>
+  <style>
+    @keyframes aurora {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 0, 20, 0.95), rgba(10, 0, 30, 0.9), rgba(0, 0, 0, 1));
+      background-size: 400% 400%;
+      animation: aurora 10s ease infinite;
+      perspective: 1000px;
+      position: relative;
+      transform-origin: center center;
+      transition: transform 0.3s ease-in-out;
+      will-change: transform, background;
+    }
+
+    h1 {
+      color: #fff;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: Arial, sans-serif;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .cube-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      position: relative;
+    }
+
+    .cube {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      transform-style: preserve-3d;
+      transition: transform 0.1s linear;
+      will-change: transform;
+      z-index: 10; /* Impostiamo il cubo davanti alle particelle */
+    }
+
+    .face {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .front  { transform: rotateY(0deg) translateZ(150px);  }
+    .back   { transform: rotateY(180deg) translateZ(150px); }
+    .right  { transform: rotateY(90deg) translateZ(150px);  }
+    .left   { transform: rotateY(-90deg) translateZ(150px); }
+    .top    { transform: rotateX(90deg) translateZ(150px);  }
+    .bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+    .particle {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background-color: yellow; /* Cambiato il colore in giallo */
+      border-radius: 50%;
+      opacity: 1;
+      pointer-events: none;
+      animation: particleAnimation 1s forwards;
+      z-index: 1; /* Impostiamo le particelle dietro al cubo */
+      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* Aggiunto effetto glow giallo */
+    }
+
+    @keyframes particleAnimation {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(100px, -100px) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+    .footer-text {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>SALVATORE FOTTI</h1>
+
+<div class="cube-container">
+  <div class="cube">
+    <!-- Sostituire le immagini con "salvatore.png" -->
+    <div class="face front"><img src="salvatore.png" alt="Front"></div>
+    <div class="face back"><img src="salvatore.png" alt="Back"></div>
+    <div class="face right"><img src="salvatore.png" alt="Right"></div>
+    <div class="face left"><img src="salvatore.png" alt="Left"></div>
+    <div class="face top"><img src="salvatore.png" alt="Top"></div>
+    <div class="face bottom"><img src="salvatore.png" alt="Bottom"></div>
+  </div>
+</div>
+
+<div class="footer-text">Fatto con l'IA come lo farebbe Salvo.</div>
+
+<script>
+  // Crea un oggetto audio e impostalo
+  const audio = new Audio('background-music.mp3'); // Usa il percorso del tuo file audio
+  audio.loop = true; // Ripeti l'audio
+  audio.volume = 0.5; // Imposta il volume
+
+  // Funzione per riprodurre la musica quando c'è una interazione utente
+  function startAudio() {
+    audio.play().then(() => {
+      console.log('Musica avviata con successo');
+    }).catch((error) => {
+      console.error('Errore nel tentativo di avviare la musica:', error);
+    });
+  }
+
+  // Inizia a riprodurre la musica dopo un clic sulla pagina
+  window.addEventListener('click', startAudio);
+
+  const cube = document.querySelector('.cube');
+  const body = document.body;
+  const cubeContainer = document.querySelector('.cube-container');
+
+  let zoomLevel = 1;
+
+  // Funzione per gestire il movimento del mouse
+  document.addEventListener('mousemove', (event) => {
+    const x = (event.clientX / window.innerWidth) * 360 - 180;
+    const y = (event.clientY / window.innerHeight) * 360 - 180;
+
+    // Ruota il cubo in base alla posizione del cursore
+    cube.style.transform = `rotateX(${-y}deg) rotateY(${x}deg)`;
+
+    // Modifica la posizione del gradiente in base al movimento del cursore
+    const gradientX = event.clientX / window.innerWidth * 100;
+    const gradientY = event.clientY / window.innerHeight * 100;
+    body.style.background = `radial-gradient(circle at ${gradientX}% ${gradientY}%, rgba(0, 0, 20, 0.95), rgba(10, 0, 30, 0.9), rgba(0, 0, 0, 1))`;
+
+    // Aggiungi particelle bianche che escono dalle facce del cubo
+    createParticleFromCube();
+  });
+
+  // Funzione per gestire la creazione delle particelle
+  function createParticleFromCube() {
+    const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+    const randomFace = faces[Math.floor(Math.random() * faces.length)];
+
+    const particle = document.createElement('div');
+    particle.classList.add('particle');
+
+    const face = document.querySelector(`.face.${randomFace}`);
+    const faceRect = face.getBoundingClientRect();
+
+    const randomX = Math.random() * faceRect.width;
+    const randomY = Math.random() * faceRect.height;
+
+    particle.style.left = `${faceRect.left + randomX - 7.5}px`;
+    particle.style.top = `${faceRect.top + randomY - 7.5}px`;
+
+    cubeContainer.appendChild(particle);
+
+    // Rimuovi la particella dopo che l'animazione è terminata
+    setTimeout(() => {
+      particle.remove();
+    }, 1000);
+  }
+
+  // Ascoltatore dell'evento "wheel" per il controllo dello zoom
+  document.addEventListener('wheel', (event) => {
+    event.preventDefault(); // Impedisce il comportamento predefinito
+    zoomLevel = Math.min(Math.max(zoomLevel + (event.deltaY > 0 ? -0.1 : 0.1), 0.5), 2);
+    document.body.style.transform = `scale(${zoomLevel})`;
+  }, { passive: false }); // Impostiamo passive: false per permettere preventDefault()
+
+</script>
+
+</body>
+</html>
